@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChoreShare: a fair chore rota for your home</title>
+<meta name="description" content="Add who lives with you and what needs doing. ChoreShare splits the chores fairly by time, rotates the worst ones and writes the group chat message.">
+<meta name="theme-color" content="#2f7d8c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23bfe6ee' stroke='%232f7d8c' stroke-width='4'/%3E%3Ccircle cx='24' cy='30' r='4' fill='%231d3a42'/%3E%3Ccircle cx='40' cy='30' r='4' fill='%231d3a42'/%3E%3Cpath d='M24 41q8 7 16 0' stroke='%231d3a42' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#rota">Skip to the rota</a>
+<header class="top">
+  <h1>ChoreShare</h1>
+  <p class="lede">Who does what this week, split fairly by time, so nobody gets stuck with the bathroom every week.</p>
+</header>
+
+<main>
+  <section class="card" id="step-people" aria-labelledby="h-people">
+    <h2 id="h-people"><span class="num">1</span> Who lives here?</h2>
+    <form id="person-form" class="row-form" autocomplete="off">
+      <label for="person-name" class="sr">Name</label>
+      <input id="person-name" name="name" placeholder="A name, like Sam" maxlength="24" required>
+      <button type="submit" class="btn">Add</button>
+    </form>
+    <ul id="people" class="people"></ul>
+    <p class="hint" id="people-hint">Kids or someone away a lot? Set them to a half share and they get about half the time.</p>
+  </section>
+
+  <section class="card" id="step-chores" aria-labelledby="h-chores">
+    <h2 id="h-chores"><span class="num">2</span> What needs doing?</h2>
+    <div class="chore-head" aria-hidden="true"><span>Chore</span><span>Minutes</span><span>How often</span><span></span></div>
+    <ul id="chores" class="chores"></ul>
+    <div class="actions">
+      <button type="button" class="btn ghost" id="add-chore">Add a chore</button>
+      <button type="button" class="btn ghost" id="add-usual">Add the usual ones</button>
+    </div>
+    <details class="hates" id="hates-box">
+      <summary>Anyone really hate a chore?</summary>
+      <p class="hint">Tick it and ChoreShare gives it to someone else when that still keeps things fair.</p>
+      <div id="hates" class="hates-grid"></div>
+    </details>
+  </section>
+
+  <section class="card" id="rota" aria-labelledby="h-rota" tabindex="-1">
+    <h2 id="h-rota"><span class="num">3</span> The rota</h2>
+    <p id="rota-empty" class="empty">Add at least two people and one chore and your rota shows up here.</p>
+    <div id="rota-body" hidden>
+      <div class="weeks" role="tablist" aria-label="Weeks" id="weeks"></div>
+      <div id="balance" class="balance" aria-live="polite"></div>
+      <div id="board" class="board"></div>
+      <div class="actions">
+        <button type="button" class="btn" id="copy-msg">Copy message for the group chat</button>
+        <button type="button" class="btn ghost" id="copy-link">Copy share link</button>
+        <button type="button" class="btn ghost" id="print">Print</button>
+      </div>
+      <p class="hint">Tap a job to tick it off or swap it to someone else. The rota repeats every 4 weeks.</p>
+    </div>
+  </section>
+
+  <p class="toast" id="toast" role="status" aria-live="polite"></p>
+</main>
+
+<footer class="foot">
+  <span>Made by <a href="https://johanthegoat.xyz">Johan</a></span>
+  <span><a href="https://github.com/johanthegoatt/choreshare">Source on GitHub</a></span>
+  <button type="button" class="linkish" id="start-over">Start over</button>
+</footer>
+
+<dialog id="job-dialog" aria-labelledby="job-title">
+  <form method="dialog">
+    <h3 id="job-title"></h3>
+    <p id="job-when" class="hint"></p>
+    <label class="check"><input type="checkbox" id="job-done"> Done</label>
+    <label for="job-who">Who does it</label>
+    <select id="job-who"></select>
+    <div class="actions">
+      <button class="btn" value="save" id="job-save">Save</button>
+      <button class="btn ghost" value="cancel">Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="suds-dock" id="suds-dock">
+  <div class="bubble" id="suds-bubble" role="status" aria-live="polite"></div>
+  <button type="button" class="suds" id="suds" aria-label="Suds the soap bubble. Tap for a tip." data-mood="sleepy">
+    <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+      <defs>
+        <radialGradient id="sudsFill" cx="38%" cy="32%" r="70%">
+          <stop offset="0" stop-color="#ffffff"/>
+          <stop offset="0.55" stop-color="#d8f1f6"/>
+          <stop offset="1" stop-color="#9fd6e2"/>
+        </radialGradient>
+      </defs>
+      <g class="s-body">
+        <circle class="s-mini m1" cx="98" cy="26" r="7"/>
+        <circle class="s-mini m2" cx="108" cy="44" r="4"/>
+        <circle cx="58" cy="62" r="44" fill="url(#sudsFill)" stroke="#2f7d8c" stroke-width="4"/>
+        <ellipse cx="40" cy="40" rx="11" ry="6" fill="#fff" opacity=".85" transform="rotate(-30 40 40)"/>
+        <g class="s-eyes">
+          <ellipse class="s-white" cx="44" cy="60" rx="9" ry="10"/>
+          <ellipse class="s-white" cx="72" cy="60" rx="9" ry="10"/>
+          <circle class="s-pupil" cx="44" cy="61" r="4.5"/>
+          <circle class="s-pupil" cx="72" cy="61" r="4.5"/>
+          <path class="s-lid" d="M34 58q10-8 20 0M62 58q10-8 20 0"/>
+        </g>
+        <circle class="s-cheek" cx="34" cy="76" r="5"/>
+        <circle class="s-cheek" cx="82" cy="76" r="5"/>
+        <path class="s-mouth happy" d="M48 78q10 9 20 0"/>
+        <path class="s-mouth worried" d="M48 83q10-7 20 0"/>
+        <ellipse class="s-mouth wow" cx="58" cy="81" rx="5" ry="6"/>
+        <path class="s-mouth sleepy" d="M51 80h14"/>
+      </g>
+    </svg>
+  </button>
+  <button type="button" class="suds-hide" id="suds-hide" aria-label="Hide Suds">×</button>
+</div>
+
+<script src="src/engine.js"></script>
+<script src="src/suds.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>
