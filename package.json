@@ -1,0 +1,10 @@
+{
+  "name": "choreshare",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A fair chore rota for a shared house or a family, with Suds the soap bubble.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT"
+}
