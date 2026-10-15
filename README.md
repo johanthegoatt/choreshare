@@ -19,7 +19,7 @@ Most rotas count jobs, not time. "One chore each" puts five minutes of bins agai
 
 1. **Who lives here?** Add names. Anyone can be on a full, half or quarter share (kids, someone away a lot).
 2. **What needs doing?** Each chore has minutes and how often: every day, 3 times a week, twice a week, weekly, every 2 weeks or every 4 weeks. "Add the usual ones" fills in a starter list. A grid marks chores someone hates.
-3. **The rota.** Four weeks, starting this Monday. Each person gets a card with their jobs by day, and a bar shows their minutes against a fair share. Tap a job to tick it off or swap it to someone else. Copy the week as a group chat message, copy a share link, or print it.
+3. **The rota.** Four weeks, starting this Monday. Each person gets a card with their jobs by day, and a bar shows their minutes against a fair share. Tap a job to tick it off or swap it to someone else. Copy the week as a group chat message, copy a share link, print it, or download each person's jobs as a calendar file that repeats with the rota.
 
 ### The split
 

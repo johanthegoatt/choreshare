@@ -342,6 +342,9 @@
       var h = el("h3");
       h.append(document.createTextNode(p.name), el("small", null, mins + " min, " + (left ? left + " to do" : "all done")));
       col.append(h);
+      var cal = el("button", { type: "button", class: "linkish cal", "aria-label": "Add " + p.name + "'s chores to a calendar" }, "Add to calendar");
+      cal.addEventListener("click", function () { downloadCalendar(p); });
+      col.append(cal);
       if (!mine.length) col.append(el("p", { class: "off" }, "A week off."));
       var ul = el("ul");
       mine.forEach(function (j) {
@@ -361,6 +364,18 @@
       col.append(ul);
       board.append(col);
     });
+  }
+
+  function downloadCalendar(p) {
+    var chores = state.chores.filter(function (c) { return c.name; });
+    var ics = E.toIcs(state.people, chores, rota, state.start, p.id);
+    var url = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+    var a = el("a", { href: url, download: "chores-" + p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + ".ics" });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+    toast("Open the file to add " + p.name + "'s chores to a calendar.");
   }
 
   // Ticks are kept per calendar week, so next cycle's week 1 starts clean.

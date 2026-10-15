@@ -132,3 +132,17 @@ test("when everyone is away the job still goes to someone", () => {
   assert.equal(rota.jobs.length, 2);
   assert.ok(rota.jobs.every((j) => j.personId === "a" || j.personId === "b"));
 });
+
+test("calendar export has one repeating all-day event per job", () => {
+  const people = [{ id: "a", name: "Ana" }, { id: "b", name: "Ben" }];
+  const list = [{ id: "bath", name: "Bathroom, upstairs; deep", minutes: 45, often: "weekly" }];
+  const rota = E.makeRota(people, list, { weeks: 4 });
+  const ics = E.toIcs(people, list, rota, "2026-10-12", "a", new Date("2026-10-12T09:00:00Z"));
+  const events = ics.split("BEGIN:VEVENT").length - 1;
+  assert.equal(events, rota.jobs.filter((j) => j.personId === "a").length);
+  assert.match(ics, /DTSTART;VALUE=DATE:202610\d\d/);
+  assert.match(ics, /RRULE:FREQ=WEEKLY;INTERVAL=4;COUNT=13/);
+  assert.ok(ics.includes("SUMMARY:Bathroom\\, upstairs\\; deep (45 min)"));
+  assert.ok(ics.split("\r\n").every((line) => Buffer.byteLength(line) <= 75));
+  assert.ok(ics.endsWith("END:VCALENDAR\r\n"));
+});

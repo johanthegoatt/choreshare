@@ -158,6 +158,58 @@
     return ((w % weeks) + weeks) % weeks;
   }
 
+  // An iCalendar file of one person's jobs, each repeating with the rota.
+  // All-day events, since a chore has a day but rarely a time.
+  function toIcs(people, chores, rota, start, personId, now) {
+    var names = {};
+    chores.forEach(function (c) { names[c.id] = c.name; });
+    var person = people.find(function (p) { return p.id === personId; });
+    var stamp = (now || new Date()).toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
+    var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//ChoreShare//EN", "CALSCALE:GREGORIAN",
+      "X-WR-CALNAME:" + icsText("Chores" + (person ? " for " + person.name : ""))];
+    rota.jobs.forEach(function (j) {
+      if (j.personId !== personId) return;
+      var day = dateOf(start, j.week, j.day);
+      var next = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1);
+      lines.push(
+        "BEGIN:VEVENT",
+        "UID:" + j.key + "-" + start + "@choreshare",
+        "DTSTAMP:" + stamp,
+        "DTSTART;VALUE=DATE:" + iso(day).replace(/-/g, ""),
+        "DTEND;VALUE=DATE:" + iso(next).replace(/-/g, ""),
+        // The rota repeats every `weeks` weeks; a year of repeats is plenty.
+        "RRULE:FREQ=WEEKLY;INTERVAL=" + rota.weeks + ";COUNT=" + Math.ceil(52 / rota.weeks),
+        "SUMMARY:" + icsText((names[j.choreId] || "Chore") + " (" + j.minutes + " min)"),
+        "TRANSP:TRANSPARENT",
+        "END:VEVENT"
+      );
+    });
+    lines.push("END:VCALENDAR");
+    return lines.map(fold).join("\r\n") + "\r\n";
+  }
+
+  // RFC 5545 3.3.11: escape backslash, semicolon, comma and newlines.
+  function icsText(text) {
+    return String(text).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  }
+
+  // RFC 5545 3.1: lines longer than 75 octets continue after CRLF + space.
+  function fold(line) {
+    var out = "";
+    var bytes = 0;
+    for (var i = 0; i < line.length; i++) {
+      var ch = line[i];
+      var size = encodeURIComponent(ch).replace(/%[0-9A-F]{2}/g, "x").length;
+      if (bytes + size > 75) {
+        out += "\r\n ";
+        bytes = 1;
+      }
+      out += ch;
+      bytes += size;
+    }
+    return out;
+  }
+
   // The group-chat message for one week.
   function weekMessage(people, chores, rota, week, start) {
     var names = {}, choreNames = {};
@@ -217,6 +269,7 @@
     dateOf: dateOf,
     weekIndex: weekIndex,
     weekMessage: weekMessage,
+    toIcs: toIcs,
     encode: encode,
     decode: decode
   };

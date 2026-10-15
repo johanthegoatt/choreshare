@@ -256,3 +256,5 @@ dialog label { display: block; margin-top: 12px; font-weight: 600; }
   .job { border: 1px solid #999; }
 }
 
+.col .cal { font-size: 0.85rem; margin: -2px 0 8px; }
+@media print { .col .cal { display: none; } }
