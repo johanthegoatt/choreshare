@@ -138,6 +138,38 @@
     });
   }
 
+  function drawAway() {
+    var box = $("away");
+    box.replaceChildren();
+    if (!state.people.length) {
+      box.append(el("p", { class: "hint" }, "Add people first."));
+      return;
+    }
+    var table = el("table");
+    var head = el("tr");
+    head.append(el("th", { scope: "col" }, "Away on"));
+    E.DAYS.forEach(function (d) { head.append(el("th", { scope: "col" }, d)); });
+    table.append(head);
+    state.people.forEach(function (p) {
+      var tr = el("tr");
+      tr.append(el("th", { scope: "row" }, p.name));
+      E.DAYS.forEach(function (d, day) {
+        var td = el("td");
+        var box2 = el("input", { type: "checkbox", "aria-label": p.name + " is away on " + d });
+        box2.checked = (p.away || []).indexOf(day) >= 0;
+        box2.addEventListener("change", function () {
+          p.away = (p.away || []).filter(function (x) { return x !== day; });
+          if (box2.checked) p.away.push(day);
+          changed(true);
+        });
+        td.append(box2);
+        tr.append(td);
+      });
+      table.append(tr);
+    });
+    box.append(table);
+  }
+
   // ---- Step 2: chores ----
   function addChore(name, minutes, often, quiet) {
     var c = { id: id("c"), name: name || "", minutes: minutes || 15, often: often || "weekly" };
@@ -432,6 +464,7 @@
       drawPeople();
       drawChores();
     }
+    drawAway();
     drawHates();
     drawRota();
     Suds.context({ people: state.people.length, chores: state.chores.filter(function (c) { return c.name; }).length });

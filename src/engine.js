@@ -71,6 +71,11 @@
     });
     var ids = {};
     people.forEach(function (p) { ids[p.id] = true; });
+    var away = {};
+    people.forEach(function (p) {
+      away[p.id] = {};
+      (p.away || []).forEach(function (d) { away[p.id][d] = true; });
+    });
 
     for (var w = 0; w < weeks; w++) {
       var week = jobs.filter(function (j) { return j.week === w; });
@@ -81,7 +86,9 @@
         var who = overrides[job.key];
         if (!ids[who]) {
           var best = null, bestScore = Infinity;
-          people.forEach(function (p, index) {
+          // Nobody gets a job on a day they are not home, unless nobody is.
+          var home = people.filter(function (p) { return !away[p.id][job.day]; });
+          (home.length ? home : people).forEach(function (p, index) {
             var s = shareOf(p);
             var times = count[p.id][job.choreId] || 0;
             var score = (load[p.id] + job.minutes) / s +

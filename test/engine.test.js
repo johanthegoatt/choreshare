@@ -115,3 +115,20 @@ test("share links round-trip, including accents and emoji", () => {
   assert.equal(E.decode("not-a-link"), null);
   assert.equal(E.decode(E.encode({ hello: 1 })), null);
 });
+
+test("nobody gets a job on a day they are away", () => {
+  const people = [{ id: "a", name: "Ana", away: [5, 6] }, { id: "b", name: "Ben" }, { id: "c", name: "Cy" }];
+  const rota = E.makeRota(people, chores, { weeks: 4 });
+  const weekendForAna = rota.jobs.filter((j) => j.personId === "a" && (j.day === 5 || j.day === 6));
+  assert.equal(weekendForAna.length, 0);
+  const fair = E.fairness(people, rota);
+  // Ana can only take weekday jobs, so she runs a little under her share.
+  assert.ok(Math.abs(fair.worst) < 0.2, `worst ${fair.worst}`);
+});
+
+test("when everyone is away the job still goes to someone", () => {
+  const people = [{ id: "a", name: "Ana", away: [5] }, { id: "b", name: "Ben", away: [5] }];
+  const rota = E.makeRota(people, [{ id: "bath", name: "Bath", minutes: 45, often: "weekly" }], { weeks: 2 });
+  assert.equal(rota.jobs.length, 2);
+  assert.ok(rota.jobs.every((j) => j.personId === "a" || j.personId === "b"));
+});

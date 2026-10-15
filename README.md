@@ -29,6 +29,7 @@ Most rotas count jobs, not time. "One chore each" puts five minutes of bins agai
 - Totals carry over between weeks, so a heavy week is paid back the next week.
 - A repeat term nudges each chore to a different person than last time, so the bathroom rotates.
 - A chore someone hates only lands on them if everyone else is clearly busier.
+- Days someone is never home (ticked in step 1) get none of their jobs, unless nobody is home that day.
 - Swaps are fixed in place and everything else rebalances around them.
 
 For the starter list in a flat of three, everyone ends the 4 weeks within 4% of a fair share (375, 350 and 360 minutes of 1,085). Tests cover the split, half shares, dislikes, swaps, the week maths and share links.
