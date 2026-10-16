@@ -24,6 +24,7 @@
   // on a half share is "full" at half the minutes.
   var REPEAT_WEIGHT = 0.6; // nudges the same chore to rotate between people
   var DISLIKE_WEIGHT = 1.0; // a hated job only lands on you if others are busier
+  var LAST_WEIGHT = 0.9;    // keeps the same chore off whoever did it last time
 
   function jobsFor(chores, weeks) {
     var jobs = [];
@@ -64,6 +65,10 @@
 
     var load = {}, count = {};
     people.forEach(function (p) { load[p.id] = 0; count[p.id] = {}; });
+    // Who did each chore most recently, so the next time it comes round it
+    // tends to go to someone else. This is what stops the worst job (the
+    // bathroom, the bins) quietly sticking to one person week after week.
+    var lastDoer = {};
     var hates = {};
     people.forEach(function (p) {
       hates[p.id] = {};
@@ -93,6 +98,7 @@
             var times = count[p.id][job.choreId] || 0;
             var score = (load[p.id] + job.minutes) / s +
               REPEAT_WEIGHT * job.minutes * times / s +
+              (lastDoer[job.choreId] === p.id ? LAST_WEIGHT * job.minutes / s : 0) +
               (hates[p.id][job.choreId] ? DISLIKE_WEIGHT * job.minutes * 2 / s : 0);
             // Ties go to the person listed first, so the result is repeatable.
             if (score < bestScore - 1e-9 || (Math.abs(score - bestScore) <= 1e-9 && best === null)) {
@@ -105,6 +111,7 @@
         }
         load[who] += job.minutes;
         count[who][job.choreId] = (count[who][job.choreId] || 0) + 1;
+        lastDoer[job.choreId] = who;
         result.jobs.push(Object.assign({}, job, { personId: who, swapped: !!overrides[job.key] && ids[overrides[job.key]] }));
       });
     }
