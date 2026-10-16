@@ -40,6 +40,18 @@ test("the worst job rotates instead of sticking to one person", () => {
   assert.ok(who.size >= 2, "bathroom should not always be the same person");
 });
 
+test("a weekly chore never lands on the same person two weeks running", () => {
+  const rota = E.makeRota(flat, chores, { weeks: 4 });
+  ["bath", "floors"].forEach((cid) => {
+    const byWeek = {};
+    rota.jobs.filter((j) => j.choreId === cid).forEach((j) => { byWeek[j.week] = j.personId; });
+    const weeks = Object.keys(byWeek).map(Number).sort((a, b) => a - b);
+    for (let i = 1; i < weeks.length; i++) {
+      assert.notEqual(byWeek[weeks[i]], byWeek[weeks[i - 1]], `${cid} repeated in weeks ${weeks[i - 1]}->${weeks[i]}`);
+    }
+  });
+});
+
 test("a half share gets about half the minutes", () => {
   const family = [
     { id: "m", name: "Mum" },

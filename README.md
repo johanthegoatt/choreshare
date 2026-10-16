@@ -28,6 +28,7 @@ Most rotas count jobs, not time. "One chore each" puts five minutes of bins agai
 - Jobs go out longest first (Graham's LPT rule, *Bounds on multiprocessing timing anomalies*, 1969), each to the person with the lowest running total divided by their share. LPT keeps the biggest total within 4/3 of the best possible split.
 - Totals carry over between weeks, so a heavy week is paid back the next week.
 - A repeat term nudges each chore to a different person than last time, so the bathroom rotates.
+- On top of that, whoever did a chore most recently is pushed to the back of the queue for its next turn, so no single job (the bins, the bathroom) sticks to one person two turns running while someone else is free.
 - A chore someone hates only lands on them if everyone else is clearly busier.
 - Days someone is never home (ticked in step 1) get none of their jobs, unless nobody is home that day.
 - Swaps are fixed in place and everything else rebalances around them.
