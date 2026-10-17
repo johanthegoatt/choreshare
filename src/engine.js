@@ -63,8 +63,8 @@
     var result = { jobs: [], weeks: weeks };
     if (!people.length) return result;
 
-    var load = {}, count = {};
-    people.forEach(function (p) { load[p.id] = 0; count[p.id] = {}; });
+    var load = {}, count = {}, presentCount = {};
+    people.forEach(function (p) { load[p.id] = 0; count[p.id] = {}; presentCount[p.id] = 0; });
     // Who did each chore most recently, so the next time it comes round it
     // tends to go to someone else. This is what stops the worst job (the
     // bathroom, the bins) quietly sticking to one person week after week.
@@ -81,8 +81,21 @@
       away[p.id] = {};
       (p.away || []).forEach(function (d) { away[p.id][d] = true; });
     });
+    // Whole weeks someone is away (a holiday, say). They get no jobs that
+    // week and the rest cover it; their fair share is counted only for the
+    // weeks they are around.
+    var awayWeek = {};
+    people.forEach(function (p) {
+      awayWeek[p.id] = {};
+      (p.awayWeeks || []).forEach(function (w) { awayWeek[p.id][w] = true; });
+    });
 
     for (var w = 0; w < weeks; w++) {
+      // Track how many weeks each person has been around so the load balance
+      // asks less of someone who was away. With nobody away this is a no-op:
+      // present weeks equals weeks elapsed, so the weighting cancels out.
+      people.forEach(function (p) { if (!awayWeek[p.id][w]) presentCount[p.id]++; });
+      var elapsed = w + 1;
       var week = jobs.filter(function (j) { return j.week === w; });
       week.sort(function (a, b) {
         return b.minutes - a.minutes || a.day - b.day || (a.choreId < b.choreId ? -1 : a.choreId > b.choreId ? 1 : 0);
@@ -91,12 +104,19 @@
         var who = overrides[job.key];
         if (!ids[who]) {
           var best = null, bestScore = Infinity;
-          // Nobody gets a job on a day they are not home, unless nobody is.
-          var home = people.filter(function (p) { return !away[p.id][job.day]; });
-          (home.length ? home : people).forEach(function (p, index) {
+          // Skip anyone away the whole week, then anyone not home that day,
+          // falling back a step at a time so a job is never left unassigned.
+          var free = people.filter(function (p) { return !awayWeek[p.id][job.week]; });
+          var pool = free.length ? free : people;
+          var home = pool.filter(function (p) { return !away[p.id][job.day]; });
+          (home.length ? home : pool).forEach(function (p, index) {
             var s = shareOf(p);
+            // Load is measured against the share a person has actually been
+            // around for, so a week away is not quietly paid back later.
+            var eff = s * presentCount[p.id] / elapsed;
+            if (!(eff > 0)) eff = s;
             var times = count[p.id][job.choreId] || 0;
-            var score = (load[p.id] + job.minutes) / s +
+            var score = (load[p.id] + job.minutes) / eff +
               REPEAT_WEIGHT * job.minutes * times / s +
               (lastDoer[job.choreId] === p.id ? LAST_WEIGHT * job.minutes / s : 0) +
               (hates[p.id][job.choreId] ? DISLIKE_WEIGHT * job.minutes * 2 / s : 0);
@@ -126,10 +146,20 @@
     var total = 0, mins = {};
     people.forEach(function (p) { mins[p.id] = 0; });
     jobs.forEach(function (j) { mins[j.personId] = (mins[j.personId] || 0) + j.minutes; total += j.minutes; });
-    var shares = people.reduce(function (t, p) { return t + shareOf(p); }, 0);
+    // Count each person's share only for the weeks they are around, so a week
+    // away does not leave them looking like they shirked.
+    var weeksTotal = rota.weeks || 1;
+    function wshare(p) {
+      if (week == null) {
+        var gone = (p.awayWeeks || []).filter(function (w) { return w >= 0 && w < weeksTotal; }).length;
+        return shareOf(p) * Math.max(0, weeksTotal - gone) / weeksTotal;
+      }
+      return (p.awayWeeks || []).indexOf(week) >= 0 ? 0 : shareOf(p);
+    }
+    var shares = people.reduce(function (t, p) { return t + wshare(p); }, 0);
     var worst = 0;
     var rows = people.map(function (p) {
-      var fair = shares ? total * shareOf(p) / shares : 0;
+      var fair = shares ? total * wshare(p) / shares : 0;
       var off = fair ? (mins[p.id] - fair) / fair : 0;
       if (Math.abs(off) > Math.abs(worst)) worst = off;
       return { personId: p.id, minutes: mins[p.id], fair: fair, off: off };

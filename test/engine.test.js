@@ -158,3 +158,47 @@ test("calendar export has one repeating all-day event per job", () => {
   assert.ok(ics.split("\r\n").every((line) => Buffer.byteLength(line) <= 75));
   assert.ok(ics.endsWith("END:VCALENDAR\r\n"));
 });
+
+test("someone away a whole week gets no jobs that week", () => {
+  var people = [
+    { id: "a", name: "Ana", awayWeeks: [1] },
+    { id: "b", name: "Bo" },
+    { id: "c", name: "Cy" }
+  ];
+  var chores = [{ id: "x", name: "Kitchen", minutes: 20, often: "daily" }];
+  var rota = E.makeRota(people, chores, { weeks: 4 });
+  var week1 = rota.jobs.filter(function (j) { return j.week === 1; });
+  assert.ok(week1.length > 0);
+  assert.equal(week1.filter(function (j) { return j.personId === "a"; }).length, 0);
+  // In a week she is around, she still gets some.
+  var week0 = rota.jobs.filter(function (j) { return j.week === 0 && j.personId === "a"; });
+  assert.ok(week0.length > 0);
+});
+
+test("a week away does not count against your fair share", () => {
+  var people = [
+    { id: "a", name: "Ana", awayWeeks: [0, 1] },
+    { id: "b", name: "Bo" }
+  ];
+  var chores = [{ id: "x", name: "Kitchen", minutes: 30, often: "daily" }];
+  var rota = E.makeRota(people, chores, { weeks: 4 });
+  var f = E.fairness(people, rota);
+  var ana = f.rows.find(function (r) { return r.personId === "a"; });
+  var bo = f.rows.find(function (r) { return r.personId === "b"; });
+  // Ana is around half the weeks, so her fair share is about half of Bo's.
+  assert.ok(Math.abs(ana.fair * 2 - bo.fair) < 1e-6);
+  // And having done fewer minutes should not read as wildly unfair.
+  assert.ok(Math.abs(ana.off) < 0.2);
+});
+
+test("if everyone is away a week the jobs still get shared out", () => {
+  var people = [
+    { id: "a", name: "Ana", awayWeeks: [0] },
+    { id: "b", name: "Bo", awayWeeks: [0] }
+  ];
+  var chores = [{ id: "x", name: "Kitchen", minutes: 20, often: "weekly" }];
+  var rota = E.makeRota(people, chores, { weeks: 2 });
+  var week0 = rota.jobs.filter(function (j) { return j.week === 0; });
+  assert.ok(week0.length > 0);
+  assert.ok(week0.every(function (j) { return j.personId === "a" || j.personId === "b"; }));
+});
