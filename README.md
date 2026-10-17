@@ -31,6 +31,7 @@ Most rotas count jobs, not time. "One chore each" puts five minutes of bins agai
 - On top of that, whoever did a chore most recently is pushed to the back of the queue for its next turn, so no single job (the bins, the bathroom) sticks to one person two turns running while someone else is free.
 - A chore someone hates only lands on them if everyone else is clearly busier.
 - Days someone is never home (ticked in step 1) get none of their jobs, unless nobody is home that day.
+- Whole weeks someone is away (a holiday, ticked in step 1) get none of their jobs either. Those weeks don't count against their fair share, and the load balance doesn't make them pay back the weeks they missed when they get back, so a week off doesn't turn into a double week on return.
 - Swaps are fixed in place and everything else rebalances around them.
 
 For the starter list in a flat of three, everyone ends the 4 weeks within 4% of a fair share (375, 350 and 360 minutes of 1,085). Tests cover the split, half shares, dislikes, swaps, the week maths and share links.

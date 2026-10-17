@@ -170,6 +170,44 @@
     box.append(table);
   }
 
+  function drawHoliday() {
+    var box = $("holiday");
+    box.replaceChildren();
+    if (!state.people.length) {
+      box.append(el("p", { class: "hint" }, "Add people first."));
+      return;
+    }
+    var table = el("table");
+    var head = el("tr");
+    head.append(el("th", { scope: "col" }, "Away for"));
+    for (var w = 0; w < WEEKS; w++) {
+      var mon = E.dateOf(state.start, w, 0);
+      head.append(el("th", { scope: "col" }, mon.toLocaleDateString(undefined, { day: "numeric", month: "short" })));
+    }
+    table.append(head);
+    state.people.forEach(function (p) {
+      var tr = el("tr");
+      tr.append(el("th", { scope: "row" }, p.name));
+      for (var wk = 0; wk < WEEKS; wk++) {
+        (function (week) {
+          var mon = E.dateOf(state.start, week, 0);
+          var td = el("td");
+          var cb = el("input", { type: "checkbox", "aria-label": p.name + " is away the week of " + mon.toLocaleDateString(undefined, { day: "numeric", month: "short" }) });
+          cb.checked = (p.awayWeeks || []).indexOf(week) >= 0;
+          cb.addEventListener("change", function () {
+            p.awayWeeks = (p.awayWeeks || []).filter(function (x) { return x !== week; });
+            if (cb.checked) p.awayWeeks.push(week);
+            changed(true);
+          });
+          td.append(cb);
+          tr.append(td);
+        })(wk);
+      }
+      table.append(tr);
+    });
+    box.append(table);
+  }
+
   // ---- Step 2: chores ----
   function addChore(name, minutes, often, quiet) {
     var c = { id: id("c"), name: name || "", minutes: minutes || 15, often: often || "weekly" };
@@ -480,6 +518,7 @@
       drawChores();
     }
     drawAway();
+    drawHoliday();
     drawHates();
     drawRota();
     Suds.context({ people: state.people.length, chores: state.chores.filter(function (c) { return c.name; }).length });
