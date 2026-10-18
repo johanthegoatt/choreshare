@@ -18,7 +18,7 @@ Most rotas count jobs, not time. "One chore each" puts five minutes of bins agai
 ## How it works
 
 1. **Who lives here?** Add names. Anyone can be on a full, half or quarter share (kids, someone away a lot).
-2. **What needs doing?** Each chore has minutes and how often: every day, 3 times a week, twice a week, weekly, every 2 weeks or every 4 weeks. "Add the usual ones" fills in a starter list. A grid marks chores someone hates.
+2. **What needs doing?** Each chore has minutes and how often: every day, 3 times a week, twice a week, weekly, every 2 weeks or every 4 weeks. "Add the usual ones" fills in a starter list. Two grids mark chores someone hates and chores someone can't do at all.
 3. **The rota.** Four weeks, starting this Monday. Each person gets a card with their jobs by day, and a bar shows their minutes against a fair share. Tap a job to tick it off or swap it to someone else. Copy the week as a group chat message, copy a share link, print it, or download each person's jobs as a calendar file that repeats with the rota.
 
 ### The split
@@ -30,11 +30,12 @@ Most rotas count jobs, not time. "One chore each" puts five minutes of bins agai
 - A repeat term nudges each chore to a different person than last time, so the bathroom rotates.
 - On top of that, whoever did a chore most recently is pushed to the back of the queue for its next turn, so no single job (the bins, the bathroom) sticks to one person two turns running while someone else is free.
 - A chore someone hates only lands on them if everyone else is clearly busier.
+- A chore someone *can't* do (a hard no, ticked in step 2: a child and bleach, an allergy, a bad back) never goes to them unless literally nobody else can take it. This is stronger than a dislike, which only nudges.
 - Days someone is never home (ticked in step 1) get none of their jobs, unless nobody is home that day.
 - Whole weeks someone is away (a holiday, ticked in step 1) get none of their jobs either. Those weeks don't count against their fair share, and the load balance doesn't make them pay back the weeks they missed when they get back, so a week off doesn't turn into a double week on return.
 - Swaps are fixed in place and everything else rebalances around them.
 
-For the starter list in a flat of three, everyone ends the 4 weeks within 4% of a fair share (375, 350 and 360 minutes of 1,085). Tests cover the split, half shares, dislikes, swaps, the week maths and share links.
+For the starter list in a flat of three, everyone ends the 4 weeks within 4% of a fair share (375, 350 and 360 minutes of 1,085). Tests cover the split, half shares, dislikes, hard "can't do" exclusions, swaps, the week maths and share links.
 
 Share links carry the whole setup in the URL fragment (`#...`), which the browser never sends to a server. Ticks and swaps are kept in `localStorage`.
 
