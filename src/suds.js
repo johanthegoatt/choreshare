@@ -207,6 +207,9 @@
       case "hate":
         say(d.on ? "Got it. I'll keep " + d.chore + " away from " + d.name + " when I can." : "Okay, " + d.name + " can get " + d.chore + " again.");
         break;
+      case "cant":
+        say(d.on ? "Understood. " + d.name + " won't get " + d.chore + " unless there's truly no one else." : "Okay, " + d.name + " can do " + d.chore + " again.");
+        break;
       case "swap": play("hop"); say("Swapped to " + d.to + ". I moved other jobs around to keep it fair."); break;
       case "done":
         play("hop");
