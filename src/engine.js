@@ -74,6 +74,14 @@
       hates[p.id] = {};
       (p.dislikes || []).forEach(function (c) { hates[p.id][c] = true; });
     });
+    // A hard "can't do this one": a child and bleach, an allergy, a bad back.
+    // Unlike a dislike (which only nudges), this chore never goes to them
+    // unless literally nobody else could take it.
+    var cant = {};
+    people.forEach(function (p) {
+      cant[p.id] = {};
+      (p.cannot || []).forEach(function (c) { cant[p.id][c] = true; });
+    });
     var ids = {};
     people.forEach(function (p) { ids[p.id] = true; });
     var away = {};
@@ -109,7 +117,10 @@
           var free = people.filter(function (p) { return !awayWeek[p.id][job.week]; });
           var pool = free.length ? free : people;
           var home = pool.filter(function (p) { return !away[p.id][job.day]; });
-          (home.length ? home : pool).forEach(function (p, index) {
+          var hereNow = home.length ? home : pool;
+          // Drop anyone who can't do this chore, unless that leaves no one.
+          var able = hereNow.filter(function (p) { return !cant[p.id][job.choreId]; });
+          (able.length ? able : hereNow).forEach(function (p, index) {
             var s = shareOf(p);
             // Load is measured against the share a person has actually been
             // around for, so a week away is not quietly paid back later.

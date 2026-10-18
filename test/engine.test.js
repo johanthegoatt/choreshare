@@ -202,3 +202,39 @@ test("if everyone is away a week the jobs still get shared out", () => {
   assert.ok(week0.length > 0);
   assert.ok(week0.every(function (j) { return j.personId === "a" || j.personId === "b"; }));
 });
+
+test("a hard 'can't do' keeps that chore off a person entirely", () => {
+  // Cy can't do the bathroom (say, the bleach). It should never land on them.
+  const people = [
+    { id: "a", name: "Ana" },
+    { id: "b", name: "Ben" },
+    { id: "c", name: "Cy", cannot: ["bath"] }
+  ];
+  const rota = E.makeRota(people, chores, { weeks: 6 });
+  const bath = rota.jobs.filter((j) => j.choreId === "bath");
+  assert.ok(bath.length > 0);
+  assert.ok(bath.every((j) => j.personId !== "c"), "Cy should never get the bathroom");
+  // Cy still does other chores, so they're not let off the hook.
+  assert.ok(rota.jobs.some((j) => j.personId === "c"));
+});
+
+test("a 'can't do' still assigns the chore when only that person is free", () => {
+  // Only Cy is around in week 1 (others away that whole week), and Cy can't do
+  // the bathroom. It must still be assigned, to Cy, rather than vanish.
+  const people = [
+    { id: "a", name: "Ana", awayWeeks: [0] },
+    { id: "c", name: "Cy", cannot: ["bath"] }
+  ];
+  const only = [{ id: "bath", name: "Clean the bathroom", minutes: 45, often: "weekly" }];
+  const rota = E.makeRota(people, only, { weeks: 1 });
+  const bath = rota.jobs.filter((j) => j.choreId === "bath");
+  assert.equal(bath.length, 1);
+  assert.equal(bath[0].personId, "c");
+});
+
+test("'can't do' survives a share-link round trip", () => {
+  const people = [{ id: "c", name: "Cy", cannot: ["bath"], dislikes: ["bins"] }];
+  const back = E.decode(E.encode({ people, chores, weeks: 4 }));
+  assert.deepEqual(back.people[0].cannot, ["bath"]);
+  assert.deepEqual(back.people[0].dislikes, ["bins"]);
+});
