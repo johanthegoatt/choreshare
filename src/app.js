@@ -250,13 +250,47 @@
         mins.value = c.minutes;
         changed(true);
       });
+      var isFixed = !!(c.fixedDays && c.fixedDays.length);
       var often = el("select", { "aria-label": "How often" });
       Object.keys(E.HOW_OFTEN).forEach(function (k) {
         var o = el("option", { value: k }, E.HOW_OFTEN[k].label);
-        if (c.often === k) o.selected = true;
+        if (!isFixed && c.often === k) o.selected = true;
         often.append(o);
       });
-      often.addEventListener("change", function () { c.often = often.value; changed(true); });
+      var fixedOpt = el("option", { value: "__fixed" }, "On set days");
+      if (isFixed) fixedOpt.selected = true;
+      often.append(fixedOpt);
+
+      // The weekday toggles, shown only when "On set days" is chosen.
+      var daysRow = el("div", { class: "chore-days" });
+      function drawDays() {
+        daysRow.textContent = "";
+        daysRow.hidden = often.value !== "__fixed";
+        if (daysRow.hidden) return;
+        daysRow.append(el("span", { class: "chore-days-label" }, "On:"));
+        E.DAYS.forEach(function (name, d) {
+          var on = (c.fixedDays || []).indexOf(d) >= 0;
+          var box = el("input", { type: "checkbox", "aria-label": name });
+          box.checked = on;
+          box.addEventListener("change", function () {
+            var set = (c.fixedDays || []).slice();
+            if (box.checked) { if (set.indexOf(d) < 0) set.push(d); }
+            else set = set.filter(function (x) { return x !== d; });
+            c.fixedDays = E.cleanDays(set);
+            changed(true);
+          });
+          var lab = el("label", { class: "chore-day" });
+          lab.append(box, el("span", {}, name));
+          daysRow.append(lab);
+        });
+      }
+      often.addEventListener("change", function () {
+        if (often.value === "__fixed") {
+          if (!(c.fixedDays && c.fixedDays.length)) c.fixedDays = E.cleanDays(E.HOW_OFTEN[c.often] ? E.HOW_OFTEN[c.often].days : [1]);
+        } else { c.often = often.value; c.fixedDays = null; }
+        drawDays();
+        changed(true);
+      });
       var x = el("button", { type: "button", class: "x", "aria-label": "Remove " + (c.name || "this chore") }, "×");
       x.addEventListener("click", function () {
         state.chores = state.chores.filter(function (d) { return d !== c; });
@@ -265,7 +299,8 @@
         changed();
         Suds.react("removed", { what: c.name || "That chore" });
       });
-      li.append(name, mins, often, x);
+      li.append(name, mins, often, x, daysRow);
+      drawDays();
       ul.append(li);
     });
   }

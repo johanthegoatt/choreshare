@@ -130,6 +130,11 @@ input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-v
   display: grid; grid-template-columns: 1fr 88px 150px 36px; gap: 8px; align-items: center;
 }
 .chore-head { font-size: 0.8rem; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.06em; padding: 0 2px 4px; }
+.chore-days { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 4px 2px 2px; }
+.chore-days[hidden] { display: none; }
+.chore-days-label { font-size: 0.85rem; color: var(--ink-2); font-weight: 650; }
+.chore-day { display: inline-flex; align-items: center; gap: 4px; font-size: 0.88rem; cursor: pointer; }
+.chore-day input { width: 18px; height: 18px; min-height: 0; accent-color: var(--green, #2f9b73); }
 .chores { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 
 .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
