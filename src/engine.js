@@ -26,13 +26,30 @@
   var DISLIKE_WEIGHT = 1.0; // a hated job only lands on you if others are busier
   var LAST_WEIGHT = 0.9;    // keeps the same chore off whoever did it last time
 
+  // Tidy a list of weekday numbers (0 = Mon ... 6 = Sun): keep whole numbers in
+  // range, drop repeats, and put them in week order.
+  function cleanDays(list) {
+    var seen = {}, out = [];
+    (list || []).forEach(function (d) {
+      var n = Math.round(Number(d));
+      if (n >= 0 && n <= 6 && !seen[n]) { seen[n] = true; out.push(n); }
+    });
+    return out.sort(function (a, b) { return a - b; });
+  }
+
   function jobsFor(chores, weeks) {
     var jobs = [];
     for (var w = 0; w < weeks; w++) {
       chores.forEach(function (chore) {
         var plan = HOW_OFTEN[chore.often] || HOW_OFTEN.weekly;
-        if (w % plan.everyWeeks !== 0) return;
-        plan.days.forEach(function (d) {
+        // A chore can be pinned to set weekdays (the bins go out on collection
+        // day, the plants get watered at the weekend). Those days win over the
+        // how-often preset, and the chore then happens every week on them.
+        var fixed = cleanDays(chore.fixedDays);
+        var days = fixed.length ? fixed : plan.days;
+        var everyWeeks = fixed.length ? 1 : plan.everyWeeks;
+        if (w % everyWeeks !== 0) return;
+        days.forEach(function (d) {
           jobs.push({
             key: chore.id + "@" + w + "-" + d,
             choreId: chore.id,
@@ -311,6 +328,7 @@
     DAYS: DAYS,
     HOW_OFTEN: HOW_OFTEN,
     jobsFor: jobsFor,
+    cleanDays: cleanDays,
     makeRota: makeRota,
     fairness: fairness,
     mondayOf: mondayOf,
