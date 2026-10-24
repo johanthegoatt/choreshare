@@ -99,6 +99,16 @@
       cant[p.id] = {};
       (p.cannot || []).forEach(function (c) { cant[p.id][c] = true; });
     });
+    // A standing "this one's mine": one person always cooks, another always
+    // does the bins. Unlike a dislike or a can't, an owned chore skips the
+    // balancer and goes straight to its owner whenever they're around, and it
+    // still counts towards their fair share. If two people own the same chore,
+    // the balancer shares it between just the two of them.
+    var owns = {};
+    people.forEach(function (p) {
+      owns[p.id] = {};
+      (p.owns || []).forEach(function (c) { owns[p.id][c] = true; });
+    });
     var ids = {};
     people.forEach(function (p) { ids[p.id] = true; });
     var away = {};
@@ -137,7 +147,11 @@
           var hereNow = home.length ? home : pool;
           // Drop anyone who can't do this chore, unless that leaves no one.
           var able = hereNow.filter(function (p) { return !cant[p.id][job.choreId]; });
-          (able.length ? able : hereNow).forEach(function (p, index) {
+          var canDo = able.length ? able : hereNow;
+          // Hand an owned chore to its owner (or share it between its owners),
+          // as long as at least one owner is here; otherwise anyone covers it.
+          var owners = canDo.filter(function (p) { return owns[p.id][job.choreId]; });
+          (owners.length ? owners : canDo).forEach(function (p, index) {
             var s = shareOf(p);
             // Load is measured against the share a person has actually been
             // around for, so a week away is not quietly paid back later.
