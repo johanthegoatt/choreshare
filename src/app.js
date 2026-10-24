@@ -103,7 +103,7 @@
       Suds.react("dupe", { name: name });
       return;
     }
-    state.people.push({ id: id("p"), name: name, share: 1, dislikes: [], cannot: [] });
+    state.people.push({ id: id("p"), name: name, share: 1, dislikes: [], cannot: [], owns: [] });
     input.value = "";
     input.focus();
     changed();
@@ -296,6 +296,7 @@
         state.chores = state.chores.filter(function (d) { return d !== c; });
         state.people.forEach(function (p) { p.dislikes = (p.dislikes || []).filter(function (d) { return d !== c.id; }); });
         state.people.forEach(function (p) { p.cannot = (p.cannot || []).filter(function (d) { return d !== c.id; }); });
+        state.people.forEach(function (p) { p.owns = (p.owns || []).filter(function (d) { return d !== c.id; }); });
         changed();
         Suds.react("removed", { what: c.name || "That chore" });
       });
@@ -365,6 +366,40 @@
           if (cb.checked) p.cannot.push(c.id);
           changed(true);
           Suds.react("cant", { name: p.name, chore: c.name, on: cb.checked });
+        });
+        td.append(cb);
+        tr.append(td);
+      });
+      table.append(tr);
+    });
+    box.append(table);
+  }
+
+  function drawOwns() {
+    var box = $("owns");
+    if (!box) return;
+    box.replaceChildren();
+    var named = state.chores.filter(function (c) { return c.name; });
+    if (!state.people.length || !named.length) {
+      box.append(el("p", { class: "hint" }, "Add people and chores first."));
+      return;
+    }
+    var table = el("table");
+    var head = el("tr");
+    head.append(el("th", { scope: "col" }, "Chore"));
+    state.people.forEach(function (p) { head.append(el("th", { scope: "col" }, p.name)); });
+    table.append(head);
+    named.forEach(function (c) {
+      var tr = el("tr");
+      tr.append(el("th", { scope: "row" }, c.name));
+      state.people.forEach(function (p) {
+        var td = el("td");
+        var cb = el("input", { type: "checkbox", "aria-label": p.name + " always does " + c.name });
+        cb.checked = (p.owns || []).indexOf(c.id) >= 0;
+        cb.addEventListener("change", function () {
+          p.owns = (p.owns || []).filter(function (d) { return d !== c.id; });
+          if (cb.checked) p.owns.push(c.id);
+          changed(true);
         });
         td.append(cb);
         tr.append(td);
@@ -592,6 +627,7 @@
     drawHoliday();
     drawHates();
     drawCant();
+    drawOwns();
     drawRota();
     Suds.context({ people: state.people.length, chores: state.chores.filter(function (c) { return c.name; }).length });
   }
